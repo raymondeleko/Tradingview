@@ -1,0 +1,100 @@
+//@version=3
+study(title=" RayRSIwithStoch", shorttitle=" RAy-RSI-STOCH", precision=0)
+//stoch rsi
+smoothK = input(5, minval=1)
+smoothD = input(5, minval=1)
+lengthRSI = input(14, minval=1)
+lengthStoch = input(15, minval=1)
+src4 = input(close, title="RSI Source")
+
+rsi1 = rsi(src4, lengthRSI)
+k = sma(stoch(rsi1, rsi1, rsi1, lengthStoch), smoothK)
+d = sma(k, smoothD)
+plot(k, color=green)
+plot(d, color=red)
+h0 = hline(80, linestyle=dotted)
+h1 = hline(20, linestyle=dotted)
+//fill(h0, h1, color=purple, transp=80)
+bgcolor( k > d ? green:red , title="stoch Background", transp=50)
+
+//Created By ray on 5/22/2019
+srcc = close
+len = input(14, minval=1, title="Length")
+upLine = input(70, minval=50, maxval=90, title="Upper Line Value?")
+lowLine = input(30, minval=10, maxval=50, title="Lower Line Value?")
+sml = input(true, title="Show Mid Line?")
+sbh = input(true, title="Show Back Ground Highlights When RSI is Above/Below High/Low Lines?")
+sch = input(true, title="Show Back Ground Highlights When RSI Cross?")
+sl = input(true, title="Show 'B' and 'S' Letters When RSI Crosses High/Low Line?")
+useCurrentRes = input(true, title="Use Current Chart Resolution?")
+resCustom = input(title="Use Different Timeframe? Uncheck Box Above", type=resolution, defval="60")
+ssRSI = input(false, title="Show 2nd RSI?")
+resCustom2 = input(title="Use 2nd RSI? Check Box Above", type=resolution, defval="D")
+useCurrentRes2 = input(false, title="Use 2nd RSI Plot On Samet Timeframe?")
+len2 = input(14, minval=1, title="2nd RSI Length")
+
+res = useCurrentRes ? period : resCustom
+res2 = useCurrentRes2 ? period : resCustom2
+
+up = rma(max(change(srcc), 0), len)
+down = rma(-min(change(srcc), 0), len)
+rsi = down == 0 ? 100 : up == 0 ? 0 : 100 - (100 / (1 + up / down))
+outRSI = security(tickerid, res, rsi)
+
+up2 = rma(max(change(srcc), 0), len2)
+down2 = rma(-min(change(srcc), 0), len2)
+rsi2 = down2 == 0 ? 100 : up2 == 0 ? 0 : 100 - (100 / (1 + up2 / down2))
+outRSI2 = security(tickerid, res2, rsi2)
+
+aboveLine = outRSI > upLine ? 1 : 0
+belowLine = outRSI < lowLine ? 1 : 0
+crossUp = outRSI[1] <  lowLine and outRSI > lowLine ? 1 : 0
+crossDn = outRSI[1] >  upLine and outRSI < upLine ? 1 : 0
+
+bgcolor(sbh and aboveLine ? red : na, transp=70)
+bgcolor(sbh and belowLine ? green : na, transp=70)
+bgcolor(sch and crossUp ? lime : na, transp=40)
+bgcolor(sch and crossDn ? red : na, transp=40)
+
+plot(outRSI, title="RSI", style=line, linewidth=3, color=aqua)
+plot(ssRSI and outRSI2 ? outRSI2 : na, title="2nd RSI - Different Time Frame?", style=linebr, linewidth=4, color=orange)
+p1 = plot(upLine, title= "Upper Line", style=solid, linewidth=3, color=red)
+p2 = plot(lowLine, title= "Lower Line", style=solid, linewidth=3, color=lime)
+plot(sml and 50 ? 50 : na, title="Mid Line", style=linebr, linewidth=2, color=gray)
+plotchar(sl and crossUp ? crossUp : na, title="Buy Signal", char='B', location=location.bottom, color=lime, transp=0, offset=0)
+plotchar(sl and crossDn ? crossDn : na, title="Sell Signal", char='S', location=location.top, color=red, transp=0, offset=0)
+fill(p1, p2, color=purple, transp=70)
+
+
+lenn = input(20, minval=1, title="RSI Length")
+lenn2 = input(10, minval=1, title="EMA of RSI Length10")
+lenn3 = input(20, minval=1, title="EMA of RSI Length20")
+lenn4 = input(55, minval=1, title="EMA of RSI Length55")
+upp = rma(max(change(srcc), 0), len)
+downn = rma(-min(change(srcc), 0), len)
+rsii = down == 0 ? 100 : up == 0 ? 0 : 100 - (100 / (1 + upp / downn))
+emaRSI = ema(rsi,lenn2)
+emaRSI2 = ema(rsi,lenn3)
+emaRSI3 = ema(rsi,lenn4)
+ema_01_len = input(10, title='Ema 1', step=1, type=integer)      
+ema_02_len = input(20, title='Ema 2', step=1, type=integer)
+ema_src = input(title="Source", type=source, defval=close)
+
+//ema crossover
+cross_01_up = crossover(emaRSI , emaRSI3)
+cross_01_down = crossunder(emaRSI , emaRSI3)
+
+plotshape( (k>d and k <= 20) and emaRSI<=emaRSI3  , title= "buy rsi", style=shape.circle, location=location.abovebar, color=emaRSI >= emaRSI3 ? lime:yellow,text="", textcolor=emaRSI >= emaRSI3 ? lime:yellow, size=size.tiny)
+plot(rsii, title="RSI", style=line, linewidth=3, color=silver)
+plot(emaRSI, title="EMA of RSI", style=line, linewidth=2, color=blue)
+plot(emaRSI2, title="EMA of RSI2", style=line, linewidth=2, color=red)
+plot(emaRSI3, title="EMA of RSI3", style=line, linewidth=2, color=green)
+
+band10 = hline(52, title="Upper Line", linestyle=dashed, linewidth=1, color=white)
+band09 = hline(48, title="Lower Line", linestyle=dashed, linewidth=1, color=white)
+
+fill(band10, band09, color=purple, transp=90)
+
+//Cross detect alert
+buystochc = ((k>d and k <= 20) )
+alertcondition(buystochc, title = "BUYstoch", message = "BUYstoch")
