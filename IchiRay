@@ -1,0 +1,253 @@
+//IchiRay comprises of different strategies and studies to increase your winning rate
+
+study(title="IchiRay Average Ribbon latest", shorttitle="IchiRay", overlay=true)
+
+conversionPeriods = input(20, minval=1, title="Conversion Line Periods"),
+basePeriods = input(60, minval=1, title="Base Line Periods")
+laggingSpan2Periods = input(120, minval=1, title="Lagging Span 2 Periods"),
+displacement = input(30, minval=1, title="Displacement")
+donchian(len) => avg(lowest(len), highest(len))
+conversionLine = donchian(conversionPeriods)
+baseLine = donchian(basePeriods)
+leadLine1 = avg(conversionLine, baseLine)
+leadLine2 = donchian(laggingSpan2Periods)
+
+plot(conversionLine, color=#0496ff, title="Conversion Line")
+plot(baseLine, color=#991515, title="Base Line")
+plot(close, offset = -displacement, color=#459915, title="Lagging Span")
+
+p11 = plot(leadLine1, offset = displacement, color=green,title="Lead 1")
+p22 = plot(leadLine2, offset = displacement, color=red,title="Lead 2")
+fill(p11, p22, color = leadLine1 > leadLine2 ? green : red)
+
+nATRPeriod = input(5)
+nATRMultip = input(3.5)
+xATR = atr(nATRPeriod)
+nLoss = nATRMultip * xATR
+xATRTrailingStop = iff(close > nz(xATRTrailingStop[1], 0) and close[1] > nz(xATRTrailingStop[1], 0), max(nz(xATRTrailingStop[1]), close - nLoss),
+                    iff(close < nz(xATRTrailingStop[1], 0) and close[1] < nz(xATRTrailingStop[1], 0), min(nz(xATRTrailingStop[1]), close + nLoss), 
+                        iff(close > nz(xATRTrailingStop[1], 0), close - nLoss, close + nLoss)))
+pos =	iff(close[1] < nz(xATRTrailingStop[1], 0) and close > nz(xATRTrailingStop[1], 0), 1,
+	    iff(close[1] > nz(xATRTrailingStop[1], 0) and close < nz(xATRTrailingStop[1], 0), -1, nz(pos[1], 0))) 
+color = pos == -1 ? red: pos == 1 ? green : blue 
+plot(xATRTrailingStop, color=color, title="ATR Trailing Stop")
+src = close, 
+len1 = input(3, minval=1, title="Fast EMA 1")
+len2 = input(5, minval=1, title="Fast EMA 2")
+len3 = input(8, minval=1, title="Fast EMA 3")
+len4 = input(10, minval=1, title="Fast EMA 4")
+len5 = input(12, minval=1, title="Fast EMA 5")
+len6 = input(15, minval=1, title="Fast EMA 6")
+//Slow EMA
+len7 = input(30, minval=1, title="Slow EMA 7")
+len8 = input(35, minval=1, title="Slow EMA 8")
+len9 = input(40, minval=1, title="Slow EMA 9")
+len10 = input(45, minval=1, title="Slow EMA 10")
+len11 = input(50, minval=1, title="Slow EMA 11")
+len12 = input(60, minval=1, title="Slow EMA 12")
+//Fast EMA
+ema1 = ema(src, len1)
+ema2 = ema(src, len2)
+ema3 = ema(src, len3)
+ema4 = ema(src, len4)
+ema5 = ema(src, len5)
+ema6 = ema(src, len6)
+//Slow EMA
+ema7 = ema(src, len7)
+ema8 = ema(src, len8)
+ema9 = ema(src, len9)
+ema10 = ema(src, len10)
+ema11 = ema(src, len11)
+ema12 = ema(src, len12)
+
+//Fast EMA Color Rules
+colfastL = (ema1 > ema2 and ema2 > ema3 and ema3 > ema4 and ema4 > ema5 and ema5 > ema6)
+colfastS = (ema1 < ema2 and ema2 < ema3 and ema3 < ema4 and ema4 < ema5 and ema5 < ema6)
+//Slow EMA Color Rules
+colslowL = ema7 > ema8 and ema8 > ema9 and ema9 > ema10 and ema10 > ema11 and ema11 > ema12 
+colslowS = ema7 < ema8 and ema8 < ema9 and ema9 < ema10 and ema10 < ema11 and ema11 < ema12
+
+doubleL = colfastL and colslowL
+doubleS = colfastS and colslowS
+
+//Fast EMA Final Color Rules
+colFinal = doubleL ? aqua : doubleS ? orange : colfastL ? green : gray
+//Slow EMA Final Color Rules
+colFinal2 = colslowL  ? lime : colslowS ? red : gray
+//Fast EMA Plots
+p1=plot(ema1, title="Fast EMA 1", style=line, linewidth=2, color=colFinal)
+plot(ema2, title="Fast EMA 2", style=line, linewidth=1, color=colFinal)
+plot(ema3, title="Fast EMA 3", style=line, linewidth=1, color=colFinal)
+plot(ema4, title="Fast EMA 4", style=line, linewidth=1, color=colFinal)
+plot(ema5, title="Fast EMA 5", style=line, linewidth=1, color=colFinal)
+p2=plot(ema6, title="Fast EMA 6", style=line, linewidth=2, color=colFinal)
+fill(p1,p2,color=colFinal, transp=60)
+//Slow EMA Plots
+p3=plot(ema7, title="Slow EMA 7", style=line, linewidth=4, color=colFinal2)
+plot(ema8, title="Slow EMA 8", style=line, linewidth=3, color=colFinal2)
+plot(ema9, title="Slow EMA 9", style=line, linewidth=3, color=colFinal2)
+plot(ema10, title="Slow EMA 10", style=line, linewidth=3, color=colFinal2)
+plot(ema11, title="Slow EMA 11", style=line, linewidth=3, color=colFinal2)
+p4=plot(ema12, title="Slow EMA 12", style=line, linewidth=4, color=colFinal2)
+fill(p3,p4, color=colFinal2, transp=60)
+
+fast_L_start    = not colfastL[1] and colfastL
+fast_L_end      = colfastL[1] and not colfastL
+fast_S_start    = not colfastS[1] and colfastS
+fast_S_end      = colfastS[1] and not colfastS
+slow_L_start    = not doubleL[1] and doubleL
+slow_L_end      = doubleL[1] and not doubleL
+slow_S_start    = not doubleS[1] and doubleS
+slow_S_end      = doubleS[1] and not doubleS
+
+fast_trend_switch = fast_L_start or fast_L_end or fast_S_start or fast_S_end
+slow_trend_switch = slow_L_start or slow_L_end or slow_S_start or slow_S_end
+
+alertcondition(fast_trend_switch, 'Fast Trend Switch', 'Fast trend switched')
+alertcondition(slow_trend_switch, 'Slow Trend Switch', 'Slow trend switched')
+alertcondition(fast_trend_switch or slow_trend_switch, 'Trend Switch', 'Trend Switch')
+exponential = input(true, title="Exponential MA")
+
+ma05 = exponential ? ema(src, 05) : sma(src, 05)
+ma10 = exponential ? ema(src, 8) : sma(src, 8)
+ma15 = exponential ? ema(src, 13) : sma(src, 13)
+ma20 = exponential ? ema(src, 21) : sma(src, 21)
+ma25 = exponential ? ema(src, 25) : sma(src, 25)
+ma30 = exponential ? ema(src, 30) : sma(src, 30)
+ma35 = exponential ? ema(src, 35) : sma(src, 35)
+ma40 = exponential ? ema(src, 40) : sma(src, 40)
+ma45 = exponential ? ema(src, 45) : sma(src, 45)
+ma50 = exponential ? ema(src, 50) : sma(src, 50)
+ma55 = exponential ? ema(src, 55) : sma(src, 55)
+ma60 = exponential ? ema(src, 60) : sma(src, 60)
+ma65 = exponential ? ema(src, 65) : sma(src, 65)
+ma70 = exponential ? ema(src, 70) : sma(src, 70)
+ma75 = exponential ? ema(src, 75) : sma(src, 75)
+ma80 = exponential ? ema(src, 80) : sma(src, 80)
+ma85 = exponential ? ema(src, 85) : sma(src, 85)
+ma90 = exponential ? ema(src, 90) : sma(src, 90)
+ma100 = exponential ? ema(src, 100) : sma(src, 100)
+
+leadMAColor = change(ma05)>=0 and ma05>ma100 ? lime
+            : change(ma05)<0  and ma05>ma100 ? maroon
+            : change(ma05)<=0 and ma05<ma100 ? red
+            : change(ma05)>=0 and ma05<ma100 ? green
+            : gray
+maColor(ma, maRef) => 
+              change(ma)>=0 and ma05>maRef ? lime
+            : change(ma)<0  and ma05>maRef ? maroon
+            : change(ma)<=0 and ma05<maRef ? red
+            : change(ma)>=0 and ma05<maRef ? green
+            : gray
+            
+//Cross detect
+CCI_Period = input(33, minval=1)
+CCI_Period14 = input(5, minval=2)
+T3_Period = input(5, minval=1)
+b = input(0.618)
+xPrice = close
+b2 = b*b
+b3 = b2*b
+c1 = -b3
+c2 = (3*(b2 + b3))
+c3 = -3*(2*b2 + b + b3)
+c4 = (1 + 3*b + b3 + 3*b2)
+nn = iff(T3_Period < 1, 1, T3_Period)
+nr = 1 + 0.5*(nn - 1)
+w1 = 2 / (nr + 1)
+w2 = 1 - w1 
+xcci = cci(xPrice, CCI_Period)
+e1 = w1*xcci + w2*nz(e1[1])
+e2 = w1*e1 + w2*nz(e2[1])
+e3 = w1*e2 + w2*nz(e3[1])
+e4 = w1*e3 + w2*nz(e4[1])
+e5 = w1*e4 + w2*nz(e5[1])
+e6 = w1*e5 + w2*nz(e6[1])
+xccir = c1*e6 + c2*e5 + c3*e4 + c4*e3 
+cciHcolor = iff(xccir >= 0 , green,iff(xccir < 0, red, black))
+
+xcci14 = cci(xPrice, CCI_Period14)
+a1 = w1*xcci14 + w2*nz(a1[1])
+a2 = w1*a1 + w2*nz(a2[1])
+a3 = w1*a2 + w2*nz(a3[1])
+a4 = w1*a3 + w2*nz(a4[1])
+a5 = w1*a4 + w2*nz(a5[1])
+a6 = w1*a5 + w2*nz(a6[1])
+xccir14 = c1*a6 + c2*a5 + c3*a4 + c4*a3 
+
+//buy trend
+buyt = (xccir > 0) and ma20>ma90
+// Alerts
+buytrend = xccir > 0 and buyt > buyt [1] 
+plotshape(buytrend, title="Buy trend" , location=location.belowbar, color=lime, text="B", transp=0, offset=0)
+
+buyyyy = ma05 > ma90 
+sellmma = ma05 < ma90 
+plotshape(buyyyy > buyyyy [1] ,location=location.belowbar, color=lime, text="BUY", transp=0, offset=0)
+plotshape(sellmma > sellmma [1] ,location=location.abovebar, color=red,  text="SELL", transp=0, offset=0)
+plotshape(buyyyy > buyyyy [1] ,color=white, location=location.belowbar, text="B")
+plotshape(sellmma > sellmma [1] ,color=white, location=location.abovebar, text="S")
+// Alerts
+buyma = ma05>ma90 and buyyyy > buyyyy [1] 
+alertcondition(buyma, title = "BUYTEXT", message = "BUYma")
+
+sellma = ma05<ma90 and sellmma > sellmma [1] 
+alertcondition(sellma, title = "SellTEXT", message = "SELLma")
+//selltrend 
+sellt = (xccir < 0 ) and buyyyy 
+// Alerts
+selltrend = xccir < 0 and sellt > sellt [1] 
+plotshape(selltrend , title="sell trend" , location=location.abovebar, color=red, text="S", transp=0, offset=0)
+
+// Alerts
+alertcondition(buytrend, title = "BUYtrend", message = "BUYtrend")
+alertcondition(selltrend , title = "SELLtrend", message = "SELLtrend")
+
+//important ema
+plot(ema(close, 222), color=#FF7000, linewidth=1, title='222 Day EMA')
+plot(ema(close, 20), color=#0088FA, linewidth=1, title='20 Day EMA')
+plot(ema(close, 50), color=#FA00D0, linewidth=1, title='50 Day EMA')
+
+//Bollinger Band Color
+length = input(defval=50, minval=1, title ="MA - Simple")
+len = input(defval=2, minval=1, title="MA - Exponantial")
+mult = input(defval=2.0, minval=0.001, maxval=50)
+//pr = input(defval=true, type=bool, title="Price Color" )
+
+//Bollinger Bands
+basis = sma(src, length)
+dev = mult * stdev(src, length)
+upper = basis + dev
+lower = basis - dev
+
+price = ema(src, len)
+linecolor = price >= basis ? green : red
+
+
+//Affichage
+
+plot(basis, color=red, transp=75, title="Moving Average")
+p111 = plot(upper, color=linecolor, transp=35, title="high band")
+p21 = plot(lower, color=linecolor, transp=35, title="Low band")
+fill(p111, p21, color=linecolor, transp=95, title="background")
+nATRPeriodd = input(5)
+nATRMultipp = input(3.5)
+xATrR = atr(nATRPeriodd)
+nLosss = nATRMultipp * xATrR
+xATRTrailingStopp = iff(close > nz(xATRTrailingStopp[1], 0) and close[1] > nz(xATRTrailingStopp[1], 0), max(nz(xATRTrailingStopp[1]), close - nLosss),
+                    iff(close < nz(xATRTrailingStopp[1], 0) and close[1] < nz(xATRTrailingStopp[1], 0), min(nz(xATRTrailingStopp[1]), close + nLosss), 
+                        iff(close > nz(xATRTrailingStopp[1], 0), close - nLosss, close + nLosss)))
+poss  =	iff(close[1] < nz(xATRTrailingStopp[1], 0) and close > nz(xATRTrailingStopp[1], 0), 1,
+	    iff(close[1] > nz(xATRTrailingStopp[1], 0) and close < nz(xATRTrailingStopp[1], 0), -1, nz(poss[1], 0))) 
+barcolor(poss == -1 ? red: poss == 1 ? green : blue )
+
+plot(xATRTrailingStopp, color=color, title="ATR Trailing Stop")
+
+sellatr = poss == -1 and poss[1] == 1
+buyatr = poss == 1 and poss[1] == -1
+
+plotshape(sellatr, title="sellatr" , location=location.abovebar, color=red, text="Satr", transp=0, offset=0)
+plotshape(buyatr, title="buyatr" , location=location.belowbar, color=black, text="Batr", transp=0, offset=0)
+
+alertcondition(sellatr, title = "SELLatr", message = "SELLatr")
+alertcondition(buyatr, title = "BUYatr", message = "BUYLatr")
